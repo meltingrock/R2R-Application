@@ -15,8 +15,33 @@ function MyAppContent({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
+    // Set theme and initialize PostHog
     setTheme(brandingConfig.theme);
     initializePostHog();
+
+    // 🛰️ Patch fetch to log outgoing HTTP requests and responses
+    const originalFetch = window.fetch;
+
+    window.fetch = async (...args) => {
+      const [resource, config] = args;
+
+      console.log('📡 [FETCH] HTTP Request');
+      console.log('→ URL:', resource);
+      console.log('→ Method:', config?.method || 'GET');
+      console.log('→ Headers:', config?.headers);
+      console.log('→ Body:', config?.body);
+
+      const response = await originalFetch(...args);
+
+      const cloned = response.clone();
+      const responseBody = await cloned.text();
+
+      console.log('📨 [FETCH] HTTP Response');
+      console.log('← Status:', response.status);
+      console.log('← Body:', responseBody);
+
+      return response;
+    };
   }, []);
 
   const checkAccess = useCallback(async () => {
@@ -56,6 +81,7 @@ function MyAppContent({ Component, pageProps }: AppProps) {
 
   return <Component {...pageProps} />;
 }
+
 
 function MyApp(props: AppProps) {
   // Move the runtime config check into useEffect
