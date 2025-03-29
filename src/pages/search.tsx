@@ -114,118 +114,128 @@ const SearchPage: React.FC = () => {
     fetchCollections();
   }, [pipeline, getClient]);
 
-  // Add this to the handleSearch function to see the full API call details
-const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  if (!query.trim()) {
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const client = await getClient();
-    if (!client) {
-      throw new Error('Failed to get authenticated client');
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!query.trim()) {
+      return;
     }
 
-    // Build search parameters
-    const searchParams = {
-      query: query,
-      // Include all selected collections if any are selected
-      ...(selectedCollectionIds.length > 0 && {
-        collections: selectedCollectionIds,
-      }),
-      // Include search limits if provided
-      ...(searchLimit && { limit: searchLimit }),
-      // Include filters if provided and valid
-      ...(searchFilters && searchFilters !== '{}' && {
-        filters: JSON.parse(searchFilters),
-      }),
-      // Include vector search settings
-      ...(switches.vectorSearch?.isEnabled && {
-        vectorSearch: {
-          enabled: true,
-          ...(indexMeasure && { indexMeasure }),
-          ...(includeMetadatas !== undefined && { includeMetadatas }),
-          ...(probes !== undefined && { probes }),
-          ...(efSearch !== undefined && { efSearch }),
-        },
-      }),
-      // Include hybrid search settings
-      ...(switches.hybridSearch?.isEnabled && {
-        hybridSearch: {
-          enabled: true,
-          ...(fullTextWeight !== undefined && { fullTextWeight }),
-          ...(semanticWeight !== undefined && { semanticWeight }),
-          ...(fullTextLimit !== undefined && { fullTextLimit }),
-          ...(rrfK !== undefined && { rrfK }),
-        },
-      }),
-      // Include KG search settings
-      ...(switches.knowledgeGraphSearch?.isEnabled && {
-        knowledgeGraphSearch: {
-          enabled: true,
-          ...(kgSearchLevel !== undefined && kgSearchLevel !== null && { level: kgSearchLevel }),
-          ...(maxCommunityDescriptionLength !== undefined && {
-            maxCommunityDescriptionLength
+    setLoading(true);
+    try {
+      const client = await getClient();
+      if (!client) {
+        throw new Error('Failed to get authenticated client');
+      }
+
+      // Build search parameters
+      const searchParams = {
+        query: query,
+        // Include all selected collections if any are selected
+        ...(selectedCollectionIds.length > 0 && {
+          collections: selectedCollectionIds,
+        }),
+        // Include search limits if provided
+        ...(searchLimit && { limit: searchLimit }),
+        // Include filters if provided and valid
+        ...(searchFilters &&
+          searchFilters !== '{}' && {
+            filters: JSON.parse(searchFilters),
           }),
-          ...(Object.keys(localSearchLimits).length > 0 && {
-            limits: localSearchLimits,
-          }),
-        },
-      }),
-    };
+        // Include vector search settings
+        ...(switches.vectorSearch?.isEnabled && {
+          vectorSearch: {
+            enabled: true,
+            ...(indexMeasure && { indexMeasure }),
+            ...(includeMetadatas !== undefined && { includeMetadatas }),
+            ...(probes !== undefined && { probes }),
+            ...(efSearch !== undefined && { efSearch }),
+          },
+        }),
+        // Include hybrid search settings
+        ...(switches.hybridSearch?.isEnabled && {
+          hybridSearch: {
+            enabled: true,
+            ...(fullTextWeight !== undefined && { fullTextWeight }),
+            ...(semanticWeight !== undefined && { semanticWeight }),
+            ...(fullTextLimit !== undefined && { fullTextLimit }),
+            ...(rrfK !== undefined && { rrfK }),
+          },
+        }),
+        // Include KG search settings
+        ...(switches.knowledgeGraphSearch?.isEnabled && {
+          knowledgeGraphSearch: {
+            enabled: true,
+            ...(kgSearchLevel !== undefined &&
+              kgSearchLevel !== null && { level: kgSearchLevel }),
+            ...(maxCommunityDescriptionLength !== undefined && {
+              maxCommunityDescriptionLength,
+            }),
+            ...(Object.keys(localSearchLimits).length > 0 && {
+              limits: localSearchLimits,
+            }),
+          },
+        }),
+      };
 
-    // Log the complete search parameters
-    console.log('Search API call parameters:', JSON.stringify(searchParams, null, 2));
+      // Log the complete search parameters
+      console.log(
+        'Search API call parameters:',
+        JSON.stringify(searchParams, null, 2)
+      );
 
-    // Make the search API call
-    const searchResponse = await client.retrieval.search(searchParams);
+      // Make the search API call
+      const searchResponse = await client.retrieval.search(searchParams);
 
-    // Log the response structure (without the full content to avoid console flooding)
-    const responseStructure = {
-      hasChunkResults: Boolean(searchResponse.results.chunkSearchResults?.length),
-      chunkResultsCount: searchResponse.results.chunkSearchResults?.length || 0,
-      hasGraphResults: Boolean(searchResponse.results.graphSearchResults?.length),
-      graphResultsCount: searchResponse.results.graphSearchResults?.length || 0,
-      responseKeys: Object.keys(searchResponse),
-      resultsKeys: Object.keys(searchResponse.results || {}),
-    };
-    console.log('Search API response structure:', responseStructure);
+      // Log the response structure (without the full content to avoid console flooding)
+      const responseStructure = {
+        hasChunkResults: Boolean(
+          searchResponse.results.chunkSearchResults?.length
+        ),
+        chunkResultsCount:
+          searchResponse.results.chunkSearchResults?.length || 0,
+        hasGraphResults: Boolean(
+          searchResponse.results.graphSearchResults?.length
+        ),
+        graphResultsCount:
+          searchResponse.results.graphSearchResults?.length || 0,
+        responseKeys: Object.keys(searchResponse),
+        resultsKeys: Object.keys(searchResponse.results || {}),
+      };
+      console.log('Search API response structure:', responseStructure);
 
-    // Set the results as before
-    setVectorSearchResults(searchResponse.results.chunkSearchResults || []);
+      // Set the results as before
+      setVectorSearchResults(searchResponse.results.chunkSearchResults || []);
 
-    const graphResults = searchResponse.results.graphSearchResults || [];
+      const graphResults = searchResponse.results.graphSearchResults || [];
 
-    setEntitySearchResults(
-      graphResults.filter(
-        (result: GraphSearchResult) => result.resultType === 'entity'
-      ) as any[]
-    );
+      setEntitySearchResults(
+        graphResults.filter(
+          (result: GraphSearchResult) => result.resultType === 'entity'
+        ) as any[]
+      );
 
-    setRelationshipSearchResults(
-      graphResults.filter(
-        (result: GraphSearchResult) => result.resultType === 'relationship'
-      ) as any[]
-    );
+      setRelationshipSearchResults(
+        graphResults.filter(
+          (result: GraphSearchResult) => result.resultType === 'relationship'
+        ) as any[]
+      );
 
-    setCommunitySearchResults(
-      graphResults.filter(
-        (result: GraphSearchResult) => result.resultType === 'community'
-      ) as any[]
-    );
-  } catch (error) {
-    console.error('Error performing search:', error);
-    // Add more detailed error logging
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      setCommunitySearchResults(
+        graphResults.filter(
+          (result: GraphSearchResult) => result.resultType === 'community'
+        ) as any[]
+      );
+    } catch (error) {
+      console.error('Error performing search:', error);
+      // Add more detailed error logging
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <Layout pageTitle="Search" includeFooter={false}>
