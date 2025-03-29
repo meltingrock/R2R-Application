@@ -30,11 +30,17 @@ const SearchPage: React.FC = () => {
 
   const [vectorSearchResults, setVectorSearchResults] = useState<any[]>([]);
   const [entitySearchResults, setEntitySearchResults] = useState<any[]>([]);
-  const [relationshipSearchResults, setRelationshipSearchResults] = useState<any[]>([]);
-  const [communitySearchResults, setCommunitySearchResults] = useState<any[]>([]);
+  const [relationshipSearchResults, setRelationshipSearchResults] = useState<
+    any[]
+  >([]);
+  const [communitySearchResults, setCommunitySearchResults] = useState<any[]>(
+    []
+  );
 
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(
+    []
+  );
 
   const { switches, initializeSwitch, updateSwitch } = useSwitchManager();
 
@@ -49,15 +55,33 @@ const SearchPage: React.FC = () => {
   const [fullTextLimit, setFullTextLimit] = useState<number>();
   const [rrfK, setRrfK] = useState<number>();
   const [kgSearchLevel, setKgSearchLevel] = useState<number | null>(null);
-  const [maxCommunityDescriptionLength, setMaxCommunityDescriptionLength] = useState<number>(100);
-  const [localSearchLimits, setLocalSearchLimits] = useState<Record<string, number>>({});
+  const [maxCommunityDescriptionLength, setMaxCommunityDescriptionLength] =
+    useState<number>(100);
+  const [localSearchLimits, setLocalSearchLimits] = useState<
+    Record<string, number>
+  >({});
 
   const [apiCallLog, setApiCallLog] = useState<any>(null); // Logging state
 
   useEffect(() => {
-    initializeSwitch('vectorSearch', true, 'Vector Search', 'Vector search is a search method that uses vectors to represent documents and queries.');
-    initializeSwitch('hybridSearch', false, 'Hybrid Search', 'Hybrid search combines multiple search methods to provide more accurate and relevant search results.');
-    initializeSwitch('knowledgeGraphSearch', true, 'Graph Search', 'Please construct a Knowledge Graph to use this feature.');
+    initializeSwitch(
+      'vectorSearch',
+      true,
+      'Vector Search',
+      'Vector search is a search method that uses vectors to represent documents and queries.'
+    );
+    initializeSwitch(
+      'hybridSearch',
+      false,
+      'Hybrid Search',
+      'Hybrid search combines multiple search methods to provide more accurate and relevant search results.'
+    );
+    initializeSwitch(
+      'knowledgeGraphSearch',
+      true,
+      'Graph Search',
+      'Please construct a Knowledge Graph to use this feature.'
+    );
   }, [initializeSwitch]);
 
   const handleSwitchChange = (id: string, checked: boolean) => {
@@ -121,9 +145,19 @@ const SearchPage: React.FC = () => {
       setVectorSearchResults(searchResponse.results.chunkSearchResults || []);
 
       const graphResults = searchResponse.results.graphSearchResults || [];
-      setEntitySearchResults(graphResults.filter((r: GraphSearchResult) => r.resultType === 'entity'));
-      setRelationshipSearchResults(graphResults.filter((r: GraphSearchResult) => r.resultType === 'relationship'));
-      setCommunitySearchResults(graphResults.filter((r: GraphSearchResult) => r.resultType === 'community'));
+      setEntitySearchResults(
+        graphResults.filter((r: GraphSearchResult) => r.resultType === 'entity')
+      );
+      setRelationshipSearchResults(
+        graphResults.filter(
+          (r: GraphSearchResult) => r.resultType === 'relationship'
+        )
+      );
+      setCommunitySearchResults(
+        graphResults.filter(
+          (r: GraphSearchResult) => r.resultType === 'community'
+        )
+      );
     } catch (error) {
       console.error('Error performing search:', error);
     } finally {
@@ -176,8 +210,13 @@ const SearchPage: React.FC = () => {
           }}
         />
 
-        <div className={`main-content-wrapper ${sidebarIsOpen ? '' : 'sidebar-closed'}`}>
-          <div className={`main-content ${sidebarIsOpen ? '' : 'sidebar-closed'}`} ref={contentAreaRef}>
+        <div
+          className={`main-content-wrapper ${sidebarIsOpen ? '' : 'sidebar-closed'}`}
+        >
+          <div
+            className={`main-content ${sidebarIsOpen ? '' : 'sidebar-closed'}`}
+            ref={contentAreaRef}
+          >
             <div className="sticky top-0 z-10 bg-zinc-900 shadow-md">
               <form onSubmit={handleSearch} className="py-4">
                 <div className="relative flex items-center focus-within:ring-2 focus-within:ring-accent-dark focus-within:ring-offset-2 focus-within:ring-offset-zinc-800 rounded-full">
@@ -189,7 +228,12 @@ const SearchPage: React.FC = () => {
                     placeholder="Enter your search query..."
                     className="w-full px-4 py-2 h-10 bg-zinc-700 text-zinc-200 rounded-l-full focus:outline-none"
                   />
-                  <Button type="submit" color="filled" className="px-4 py-2 h-10 rounded-r-full" disabled={loading}>
+                  <Button
+                    type="submit"
+                    color="filled"
+                    className="px-4 py-2 h-10 rounded-r-full"
+                    disabled={loading}
+                  >
                     {loading ? 'Searching...' : <ArrowRight size={20} />}
                   </Button>
                 </div>
@@ -199,7 +243,9 @@ const SearchPage: React.FC = () => {
             <div className="p-4">
               {apiCallLog && (
                 <div className="mb-6 p-4 bg-zinc-900 rounded text-sm">
-                  <h3 className="font-semibold mb-2">Logged API Call Parameters:</h3>
+                  <h3 className="font-semibold mb-2">
+                    Logged API Call Parameters:
+                  </h3>
                   <pre className="overflow-auto whitespace-pre-wrap">
                     {JSON.stringify(apiCallLog, null, 2)}
                   </pre>
@@ -212,18 +258,31 @@ const SearchPage: React.FC = () => {
                   <TabsList>
                     <TabsTrigger value="chunk">Chunks</TabsTrigger>
                     <TabsTrigger value="entity">Entities</TabsTrigger>
-                    <TabsTrigger value="relationship">Relationships</TabsTrigger>
+                    <TabsTrigger value="relationship">
+                      Relationships
+                    </TabsTrigger>
                     <TabsTrigger value="community">Communities</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="chunk">
                     {vectorSearchResults.length > 0 ? (
                       vectorSearchResults.map((result, index) => (
-                        <div key={index} className="mb-4 p-4 bg-zinc-800 rounded">
-                          <h3 className="text-lg font-semibold mb-2">{result.metadata?.title || `Result ${index + 1}`}</h3>
+                        <div
+                          key={index}
+                          className="mb-4 p-4 bg-zinc-800 rounded"
+                        >
+                          <h3 className="text-lg font-semibold mb-2">
+                            {result.metadata?.title || `Result ${index + 1}`}
+                          </h3>
                           <p className="text-sm mb-2">{result.text}</p>
-                          <p className="text-sm mb-2">Score: {result.score.toFixed(4)}</p>
-                          <Accordion type="single" collapsible className="w-full">
+                          <p className="text-sm mb-2">
+                            Score: {result.score.toFixed(4)}
+                          </p>
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
                             <AccordionItem value={`item-${index}`}>
                               <AccordionTrigger>View Details</AccordionTrigger>
                               <AccordionContent>
@@ -243,14 +302,28 @@ const SearchPage: React.FC = () => {
                   <TabsContent value="entity">
                     {entitySearchResults.length > 0 ? (
                       entitySearchResults.map((result, index) => (
-                        <div key={index} className="mb-4 p-4 bg-zinc-800 rounded">
-                          <h3 className="text-lg font-semibold mb-2">{result.content.name}</h3>
-                          <p className="text-sm mb-2">{result.content.description}</p>
-                          <Accordion type="single" collapsible className="w-full">
+                        <div
+                          key={index}
+                          className="mb-4 p-4 bg-zinc-800 rounded"
+                        >
+                          <h3 className="text-lg font-semibold mb-2">
+                            {result.content.name}
+                          </h3>
+                          <p className="text-sm mb-2">
+                            {result.content.description}
+                          </p>
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
                             <AccordionItem value={`item-${index}`}>
                               <AccordionTrigger>View Details</AccordionTrigger>
                               <AccordionContent>
-                                <pre className="text-xs bg-zinc-900 p-4 rounded" style={{ whiteSpace: 'pre-wrap' }}>
+                                <pre
+                                  className="text-xs bg-zinc-900 p-4 rounded"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                >
                                   {JSON.stringify(result, null, 2)}
                                 </pre>
                               </AccordionContent>
@@ -266,15 +339,26 @@ const SearchPage: React.FC = () => {
                   <TabsContent value="relationship">
                     {relationshipSearchResults.length > 0 ? (
                       relationshipSearchResults.map((result, index) => (
-                        <div key={index} className="mb-4 p-4 bg-zinc-800 rounded">
+                        <div
+                          key={index}
+                          className="mb-4 p-4 bg-zinc-800 rounded"
+                        >
                           <h3 className="text-lg font-semibold mb-2">
-                            {result.content.subject} {result.content.predicate} {result.content.object}
+                            {result.content.subject} {result.content.predicate}{' '}
+                            {result.content.object}
                           </h3>
-                          <Accordion type="single" collapsible className="w-full">
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
                             <AccordionItem value={`item-${index}`}>
                               <AccordionTrigger>View Details</AccordionTrigger>
                               <AccordionContent>
-                                <pre className="text-xs bg-zinc-900 p-4 rounded" style={{ whiteSpace: 'pre-wrap' }}>
+                                <pre
+                                  className="text-xs bg-zinc-900 p-4 rounded"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                >
                                   {JSON.stringify(result, null, 2)}
                                 </pre>
                               </AccordionContent>
@@ -290,14 +374,28 @@ const SearchPage: React.FC = () => {
                   <TabsContent value="community">
                     {communitySearchResults.length > 0 ? (
                       communitySearchResults.map((result, index) => (
-                        <div key={index} className="mb-4 p-4 bg-zinc-800 rounded">
-                          <h3 className="text-lg font-semibold mb-2">{result.content.name}</h3>
-                          <p className="text-sm mb-2">{result.content.summary}</p>
-                          <Accordion type="single" collapsible className="w-full">
+                        <div
+                          key={index}
+                          className="mb-4 p-4 bg-zinc-800 rounded"
+                        >
+                          <h3 className="text-lg font-semibold mb-2">
+                            {result.content.name}
+                          </h3>
+                          <p className="text-sm mb-2">
+                            {result.content.summary}
+                          </p>
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
                             <AccordionItem value={`item-${index}`}>
                               <AccordionTrigger>View Details</AccordionTrigger>
                               <AccordionContent>
-                                <pre className="text-xs bg-zinc-900 p-4 rounded" style={{ whiteSpace: 'pre-wrap' }}>
+                                <pre
+                                  className="text-xs bg-zinc-900 p-4 rounded"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                >
                                   {JSON.stringify(result, null, 2)}
                                 </pre>
                               </AccordionContent>
