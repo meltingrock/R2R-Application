@@ -7,7 +7,6 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { brandingConfig } from '@/config/brandingConfig';
 import { UserProvider, useUserContext } from '@/context/UserContext';
 import '@/styles/globals.css';
-import { initializePostHog } from '@/lib/posthog-client';
 
 function MyAppContent({ Component, pageProps }: AppProps) {
   const { setTheme } = useTheme();
@@ -15,9 +14,8 @@ function MyAppContent({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // Set theme and initialize PostHog
+    // Set theme
     setTheme(brandingConfig.theme);
-    initializePostHog();
 
     // 🛰️ Patch fetch to log outgoing HTTP requests and responses
     const originalFetch = window.fetch;
