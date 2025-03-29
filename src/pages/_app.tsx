@@ -82,7 +82,6 @@ function MyAppContent({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
 }
 
-
 function MyApp(props: AppProps) {
   // Move the runtime config check into useEffect
   useEffect(() => {
